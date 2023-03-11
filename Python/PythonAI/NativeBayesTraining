@@ -1,0 +1,86 @@
+import os
+import pandas as pd
+import email
+import mailbox
+from sklearn.metrics import ConfusionMatrixDisplay
+import email.policy
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB, BernoulliNB
+from sklearn.metrics import confusion_matrix, classification_report
+
+
+#Code for reading and extracting
+def extractEmails(directories, label):
+ emailData = []
+ for directory in directories:
+    emailData.append(processEmailDirectory(directory, label))
+ return pd.concat(emailData)
+
+
+def readEmailFromFile(filePath):
+    with open(filePath, 'rb') as file:
+        emailContent = file.read()
+    return email.message_from_bytes(emailContent,policy=email.policy.default), emailContent.decode('utf-8',errors='ignore')
+
+
+def processEmailDirectory(directory, label):
+    emailData = []
+    for filename in os.listdir(directory):
+        filePath = os.path.join(directory, filename)
+        emailMessage, emailContent = readEmailFromFile(filePath)
+        emailData.append({'email': emailMessage, 'content':emailContent, 'class': label})
+    return pd.DataFrame(emailData)
+
+#Training
+def runNaiveBayesModels(X_train, X_test, y_train, y_test, cv=None,fit_prior = None):
+    vectorizer = CountVectorizer()
+    X_train2 = vectorizer .fit_transform(X_train)
+    X_test2 = vectorizer .transform(X_test)
+    mnb = MultinomialNB()
+    mnb.fit(X_train2, y_train)
+    bnb = BernoulliNB()
+    bnb.fit(X_train2, y_train)
+    predictMnb = mnb.predict(X_test2)
+    predictBnb = bnb.predict(X_test2)
+
+    print("Multinomial Naive Bayes:\n")
+    print(classification_report(y_test, predictMnb))
+    ConfusionMatrixDisplay(confusion_matrix(y_test, predictMnb),display_labels=["ham", "spam"]).plot(cmap=plt.cm.Blues, ax=None,values_format=None)
+    print("\n")
+    print("Bernoulli Naive Bayes:\n")
+    print(classification_report(y_test, predictBnb))
+    ConfusionMatrixDisplay(confusion_matrix(y_test, predictBnb),display_labels=["ham", "spam"]).plot(cmap=plt.cm.Blues, ax=None,values_format=None)
+    print("\n")
+
+easyHamEmails = processEmailDirectory('./easy_ham', 'ham')
+hardHamEmails = processEmailDirectory('./hard_ham', 'ham')
+spamEmails = processEmailDirectory('./spam', 'spam')
+allEmail = pd.concat([easyHamEmails, hardHamEmails, spamEmails])
+X = allEmail['content']
+y = allEmail['class']
+X_train, X_test, y_train, y_test = train_test_split(X, y,train_size=0.8, random_state=0)
+
+
+
+
+runNaiveBayesModels(X_train, X_test, y_train, y_test, cv=None,fit_prior = None)
+
+#Compare easy vs hard
+spamVSeasyHam = pd.concat([spamEmails, easyHamEmails])
+
+X = spamVSeasyHam['content']
+y = spamVSeasyHam['class']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y,train_size=0.8, random_state=0)
+print("easyHamEmails")
+
+runNaiveBayesModels(X_train, X_test, y_train, y_test, cv=None,fit_prior = None)
+spamVShardHam = pd.concat([spamEmails, hardHamEmails])
+X = spamVShardHam['content']
+y = spamVShardHam['class']
+X_train, X_test, y_train, y_test = train_test_split(X, y,train_size=0.8, random_state=0)
+print("hardHamEmails")
+runNaiveBayesModels(X_train, X_test, y_train, y_test, cv=None,fit_prior = None)
