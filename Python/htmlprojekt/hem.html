@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+
+<html>
+    
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:100,200,300,400,500,600,700,800,900" rel="stylesheet">
+
+    <title>HP Hjälpen</title>
+    
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Additional CSS Files -->
+    <link rel="stylesheet" href="assets/css/fontawesome.css">
+    <link rel="stylesheet" href="assets/css/templatemo-grad-school.css">
+    <link rel="stylesheet" href="assets/css/owl.css">
+    <link rel="stylesheet" href="assets/css/lightbox.css">
+
+  </head>
+  <body>
+  <header class="main-header clearfix" role="header">
+    <div class="logo">
+      <a href="./index.html"><em>HP</em> Hjälpen</a>
+    </div>
+    <a href="#menu" class="menu-link"><i class="fa fa-bars"></i></a>
+    <nav id="menu" class="main-nav" role="navigation">
+      <ul class="main-menu">
+        <li><a href="./index.html">HEM</a></li>
+        <li class="has-submenu"><a href="./index.html">OM OSS</a>
+          <ul class="sub-menu">
+            <li><a href="./index.html">Vilka är vi?</a></li>
+            <li><a href="./index.html">Vad gör vi?</a></li>
+            <li><a href="./index.html">Hur funkar det?</a></li>
+          </ul>
+        </li>
+        
+        <!-- <li><a href="#section5">Video</a></li> -->
+        <li><a href="#section6">kontakt</a></li>
+      </ul>
+    </nav>
+  </header>
+  
+    </div>
+
+    <style>
+        body {
+          display: ruby;
+          flex-direction: column;
+          align-items: center;
+        }
+        #picture {
+          width: auto; /* adjust this value to change the size of the image */
+          height: auto;
+          border: 5px solid rgb(0, 0, 0);
+          border-radius: 10px;
+        }
+        #score-counter {
+          position: absolute;
+          bottom: 10px;
+          right: 10px;
+        }
+        button {
+          width: 80px; /* adjust this value to change the size of the buttons */
+          height: 30px;
+          font-size: 16px; /* adjust this value to change the font size of the button text */
+          margin: 10px;
+        }
+      </style>
+      <div id="score-counter"></div>
+
+      <div class="container">
+        <p style="text-align:center;margin-top: 200px;"><img src="bilderMatte\Agregr.png" id="picture">
+      </div>
+      
+      <div style="text-align:center;margin-bottom: 20%;">
+          <button type="button" onclick="checkAnswer('A')">A</button>
+          <button type="button" onclick="checkAnswer('B')">B</button>
+          <button type="button" onclick="checkAnswer('C')">C</button>
+          <button type="button" onclick="checkAnswer('D')">D</button>
+          <div style="text-align:center;"id="message"></div>
+        </div>
+        
+    <form>
+    </form>
+        <script>
+            let correctAnswers = 0;
+            let wrongAnswers = 0;
+            const triesAllowed = 2;
+            let tries = triesAllowed; // number of tries
+            function incrementCorrectAnswers() {
+              correctAnswers++;
+              updateScoreCounter();
+            }   
+            function incrementWrongAnswers() {
+              wrongAnswers++;
+              updateScoreCounter();
+            }
+            function updateScoreCounter() {
+              document.getElementById("score-counter").innerHTML = "Rätt: " + correctAnswers + " Fel: " + wrongAnswers;             
+            } 
+            function checkAnswer(selected) {
+              // get the name of the picture
+              const imgElement = document.getElementById('picture');
+              const src = imgElement.src;
+              const letter = src.charAt(src.lastIndexOf('/') + 1).charAt(0); // extract the first letter of the name
+              if (letter == selected) { // check if the selected alternative is correct
+                // display a message and load a new picture
+                document.getElementById('message').innerHTML = 'Rätt!';
+                incrementCorrectAnswers();
+                tries = triesAllowed;
+                usedPictures.push(document.getElementById('picture').src);
+                loadPicture();
+              } else {
+                tries--; // decrease the number of tries
+                if (tries == 0) {
+                  // display a message and load a new picture
+                  document.getElementById('message').innerHTML = 'Fel. Inga mer försök.';
+                  incrementWrongAnswers();
+                  tries = triesAllowed;
+                  usedPictures.push(document.getElementById('picture').src);
+                  loadPicture();
+                } else {
+                  // display a message
+                  document.getElementById('message').innerHTML = 'Fel. Försök kvar: ' + tries;
+                }
+              }
+            }
+          </script>
+          <script>
+            let usedPictures = []; // array to keep track of used pictures
+                function loadPicture() {
+                // create an XMLHttpRequest object
+                var xhr = new XMLHttpRequest();
+                // set the callback function to handle the response from the PHP script
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState == 4 && xhr.status == 200) {
+                    // update the src property of the img element with the response from the PHP script
+                    document.getElementById('picture').src = xhr.responseText;
+                    // reset the counter
+                    tries = 2;
+                    }
+                };
+                // open the request and send the usedPictures array as a POST parameter
+                xhr.open('POST', 'wtf.php', true);
+                xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+                xhr.send('used=' + JSON.stringify(usedPictures));
+                }
+          </script>    
+  </body>
+</html>
